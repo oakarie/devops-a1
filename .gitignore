@@ -10,4 +10,7 @@ env/
 # macOS
 .DS_Store
 
+# SQLite database files
+*.db
+
 

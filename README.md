@@ -21,3 +21,19 @@ uvicorn main:app --reload
 ```
 curl http://127.0.0.1:8000/health
 ```
+
+### Companies
+
+Create one (name is the only must-have):
+
+```
+curl -s -X POST http://127.0.0.1:8000/companies \
+  -H 'Content-Type: application/json' \
+  -d '{"name": "Acme Co", "website": "https://acme.example"}'
+```
+
+List them (optionally filter by name):
+
+```
+curl -s 'http://127.0.0.1:8000/companies?q=acme'
+```
