@@ -8,7 +8,7 @@ More brains coming later... for now, it's a friendly healthcheck.
 from fastapi import FastAPI, Depends, HTTPException, Query
 from typing import List, Optional, Generator
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from sqlalchemy import Column, DateTime, Integer, String, create_engine, func
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
@@ -60,6 +60,14 @@ class CompanyCreate(BaseModel):
     industry: Optional[str] = None
     niche: Optional[str] = None
 
+    # Keep names at least 2 chars so they look like real names
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        if value is None or len(value.strip()) < 2:
+            raise ValueError("Name's a bit short — please use at least 2 characters.")
+        return value
+
 
 class CompanyOut(BaseModel):
     id: int
@@ -74,6 +82,26 @@ class CompanyOut(BaseModel):
 
     # tell Pydantic it's okay to read from SQLAlchemy objects
     model_config = ConfigDict(from_attributes=True)
+
+
+class CompanyUpdate(BaseModel):
+    # All optional for PATCH; we only touch what's provided
+    name: Optional[str] = None
+    website: Optional[str] = None
+    country: Optional[str] = None
+    state: Optional[str] = None
+    city: Optional[str] = None
+    industry: Optional[str] = None
+    niche: Optional[str] = None
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+        if len(value.strip()) < 2:
+            raise ValueError("Name's a bit short — please use at least 2 characters.")
+        return value
 
 
 @app.on_event("startup")
@@ -130,4 +158,51 @@ def get_company(id: int, db: Session = Depends(get_db)) -> CompanyOut:
             },
         )
     return company
+
+
+@app.patch("/companies/{id}", response_model=CompanyOut)
+def update_company(
+    id: int, payload: CompanyUpdate, db: Session = Depends(get_db)
+) -> CompanyOut:
+    company = db.get(Company, id)
+    if not company:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": "company_not_found",
+                "message": f"No company with id {id} yet — try creating one first.",
+            },
+        )
+
+    # Only change what's explicitly sent; leave the rest alone
+    updates = payload.model_dump(exclude_unset=True)
+    if not updates:
+        return company  # nothing to do, nothing to change
+
+    # Small, readable loop beats clever one-liners here
+    for field_name, field_value in updates.items():
+        if field_name in {"id", "created_at"}:
+            continue  # keep identity and timestamps untouched
+        setattr(company, field_name, field_value)
+
+    db.add(company)
+    db.commit()
+    db.refresh(company)
+    return company
+
+
+@app.delete("/companies/{id}", status_code=204)
+def delete_company(id: int, db: Session = Depends(get_db)) -> None:
+    company = db.get(Company, id)
+    if not company:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": "company_not_found",
+                "message": f"No company with id {id} yet — try creating one first.",
+            },
+        )
+    db.delete(company)
+    db.commit()
+    # 204 No Content — nothing to return and that's okay
 

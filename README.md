@@ -37,3 +37,17 @@ List them (optionally filter by name):
 ```
 curl -s 'http://127.0.0.1:8000/companies?q=acme'
 ```
+
+Update one (partial update — only what you send changes):
+
+```
+curl -s -X PATCH http://127.0.0.1:8000/companies/1 \
+  -H 'Content-Type: application/json' \
+  -d '{"name": "Acme Incorporated", "city": "New York"}'
+```
+
+Delete one (bye bye):
+
+```
+curl -i -X DELETE http://127.0.0.1:8000/companies/1
+```
