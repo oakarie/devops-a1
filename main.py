@@ -319,3 +319,60 @@ def delete_company(id: int, db: Session = Depends(get_db)) -> None:
     db.commit()
     # 204 No Content... nothing to return and that's okay
 
+
+# --- Evaluate endpoint (turn booleans into a persisted Evaluation) ---
+class EvaluateIn(BaseModel):
+    company_id: int
+    has_contact_page: bool
+    has_clear_services_page: bool
+    has_gmb_or_maps_listing: bool
+    has_recent_updates: bool
+    has_reviews_or_testimonials: bool
+    has_online_booking_or_form: bool
+    uses_basic_schema_markup: bool
+    has_consistent_name_address_phone: bool
+    has_fast_load_time_claim: bool
+    content_matches_intent: bool
+
+
+@app.post("/evaluate", response_model=EvaluationOut, status_code=201)
+def evaluate_company(payload: EvaluateIn, db: Session = Depends(get_db)) -> EvaluationOut:
+    # First, make sure we're scoring a real company
+    company = db.get(Company, payload.company_id)
+    if not company:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": "company_not_found",
+                "message": f"No company with id {payload.company_id} yet... try creating one first.",
+            },
+        )
+
+    # Map inputs to our fixed signal names so the scoring stays predictable
+    signals = {
+        "contact page": payload.has_contact_page,
+        "clear services page": payload.has_clear_services_page,
+        "maps/GMB listing": payload.has_gmb_or_maps_listing,
+        "recent updates": payload.has_recent_updates,
+        "reviews/testimonials": payload.has_reviews_or_testimonials,
+        "online booking/form": payload.has_online_booking_or_form,
+        "basic schema markup": payload.uses_basic_schema_markup,
+        "NAP consistent": payload.has_consistent_name_address_phone,
+        "loads fast": payload.has_fast_load_time_claim,
+        "content matches intent": payload.content_matches_intent,
+    }
+
+    # Pure function, pure vibes — no AI, no network calls
+    result = compute_findability(signals)
+
+    evaluation = Evaluation(
+        company_id=payload.company_id,
+        score=float(result["score"]),
+        badge=str(result["badge"]),
+        evidence=list(result["evidence"]),
+    )
+    db.add(evaluation)
+    db.commit()
+    db.refresh(evaluation)
+    return evaluation
+
