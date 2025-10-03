@@ -107,7 +107,7 @@ class CompanyCreate(BaseModel):
     @classmethod
     def validate_name(cls, value: str) -> str:
         if value is None or len(value.strip()) < 2:
-            raise ValueError("Name's a bit short — please use at least 2 characters.")
+            raise ValueError("Name's a bit short... please use at least 2 characters.")
         return value
 
 
@@ -142,7 +142,7 @@ class CompanyUpdate(BaseModel):
         if value is None:
             return value
         if len(value.strip()) < 2:
-            raise ValueError("Name's a bit short — please use at least 2 characters.")
+            raise ValueError("Name's a bit short... please use at least 2 characters.")
         return value
 
 
@@ -155,6 +155,66 @@ class EvaluationOut(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# --- Pure scoring helper: no AI, no network ---
+SIGNALS: List[str] = [
+    "contact page",
+    "clear services page",
+    "maps/GMB listing",
+    "recent updates",
+    "reviews/testimonials",
+    "online booking/form",
+    "basic schema markup",
+    "NAP consistent",
+    "loads fast",
+    "content matches intent",
+]
+
+
+def compute_findability(signals: dict[str, bool]) -> dict:
+    """Turn simple boolean hints into a score, badge, and evidence.
+
+    Why this exists: we want something deterministic and explainable
+    can read it without guessing hidden magic.
+    """
+    # Gather which signals are present, preserving our fixed order for sanity
+    present_flags = [bool(signals.get(name, False)) for name in SIGNALS]
+    n_true = sum(1 for flag in present_flags if flag)
+
+    mentioned = n_true >= 2
+    presence = 1.0 if mentioned else 0.0
+
+    if n_true >= 6:
+        rank_component = 1.0
+    elif n_true >= 4:
+        rank_component = 0.9
+    elif n_true >= 2:
+        rank_component = 0.8
+    else:
+        rank_component = 0.0
+
+    rank_confidence = min(1.0, 0.3 + 0.1 * n_true)
+
+    overall = 0.6 * presence + 0.3 * rank_component + 0.1 * rank_confidence
+    # Clamp for safety because float math can be spicy
+    overall = max(0.0, min(1.0, overall))
+
+    if overall >= 0.8:
+        badge = "excellent"
+    elif overall >= 0.6:
+        badge = "good"
+    elif overall >= 0.4:
+        badge = "fair"
+    else:
+        badge = "poor"
+
+    evidence_list = [f"+ {name}" for name, flag in zip(SIGNALS, present_flags) if flag]
+    if not evidence_list:
+        evidence_list = ["No clear signals provided"]
+
+    # yes, this could have been JSON only, but we’re being grown-ups.
+    return {"score": overall, "badge": badge, "evidence": evidence_list}
 
 
 @app.on_event("startup")
@@ -207,7 +267,7 @@ def get_company(id: int, db: Session = Depends(get_db)) -> CompanyOut:
             status_code=404,
             detail={
                 "error": "company_not_found",
-                "message": f"No company with id {id} yet — try creating one first.",
+                "message": f"No company with id {id} yet... try creating one first.",
             },
         )
     return company
@@ -223,7 +283,7 @@ def update_company(
             status_code=404,
             detail={
                 "error": "company_not_found",
-                "message": f"No company with id {id} yet — try creating one first.",
+                "message": f"No company with id {id} yet... try creating one first.",
             },
         )
 
@@ -252,10 +312,10 @@ def delete_company(id: int, db: Session = Depends(get_db)) -> None:
             status_code=404,
             detail={
                 "error": "company_not_found",
-                "message": f"No company with id {id} yet — try creating one first.",
+                "message": f"No company with id {id} yet... try creating one first.",
             },
         )
     db.delete(company)
     db.commit()
-    # 204 No Content — nothing to return and that's okay
+    # 204 No Content... nothing to return and that's okay
 
