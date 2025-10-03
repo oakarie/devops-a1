@@ -9,8 +9,19 @@ from fastapi import FastAPI, Depends, HTTPException, Query
 from typing import List, Optional, Generator
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, field_validator
-from sqlalchemy import Column, DateTime, Integer, String, create_engine, func
-from sqlalchemy.orm import Session, declarative_base, sessionmaker
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Integer,
+    String,
+    Float,
+    JSON,
+    ForeignKey,
+    create_engine,
+    func,
+    event,
+)
+from sqlalchemy.orm import Session, declarative_base, sessionmaker, relationship
 
 
 app = FastAPI(
@@ -32,6 +43,13 @@ engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False},  # SQLite being SQLite
 )
+
+# Turn on SQLite foreign keys so cascade actually works
+@event.listens_for(engine, "connect")
+def _enable_sqlite_foreign_keys(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 Base = declarative_base()
 
@@ -48,6 +66,30 @@ class Company(Base):
     industry = Column(String, nullable=True)
     niche = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+    # Keep a handy backref to evaluations (lazy selectin keeps things snappy)
+    evaluations = relationship(
+        "Evaluation",
+        back_populates="company",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+    )
+
+
+class Evaluation(Base):
+    __tablename__ = "evaluations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(
+        Integer, ForeignKey("companies.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    score = Column(Float, nullable=False)
+    badge = Column(String, nullable=False)  # "excellent"|"good"|"fair"|"poor"
+    # yes, this could have been JSON only, but we’re being grown-ups.
+    evidence = Column(JSON, nullable=False)  # list[str]
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+    company = relationship("Company", back_populates="evaluations")
 
 
 # Pydantic schemas (input and output shapes)
@@ -102,6 +144,17 @@ class CompanyUpdate(BaseModel):
         if len(value.strip()) < 2:
             raise ValueError("Name's a bit short — please use at least 2 characters.")
         return value
+
+
+class EvaluationOut(BaseModel):
+    id: int
+    company_id: int
+    score: float
+    badge: str
+    evidence: List[str]
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 @app.on_event("startup")
