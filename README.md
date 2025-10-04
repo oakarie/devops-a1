@@ -92,3 +92,17 @@ Typical response keys:
   "created_at": "..."
 }
 ```
+
+### Tests
+
+Run tests (calm and boring, just how we like them):
+
+```
+pytest --maxfail=1 -q
+```
+
+With coverage (if configured locally):
+
+```
+pytest --cov
+```

@@ -2,5 +2,8 @@ fastapi
 uvicorn
 pydantic
 sqlalchemy
+pytest
+pytest-cov
+requests
 
 
