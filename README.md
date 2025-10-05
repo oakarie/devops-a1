@@ -189,4 +189,15 @@ Then open `htmlcov/index.html` in your browser.
 | Database not updating | Delete `gpt_findability.db` and restart |
 | Tests fail unexpectedly | Ensure Python ≥ 3.11 and reinstall dependencies |
 
+## Future Work
 
+The next step for this project would be to connect the evaluation logic to a real language model, specifically OpenAI’s GPT API.  
+Instead of manually providing signals, the system would automatically generate structured "probes" such as:
+
+> “Which HVAC companies are based in Montreal?”  
+> “Name solar panel installers in Madrid.”
+
+The API’s responses could then be parsed to determine if a given business is mentioned or ranked, producing a more realistic “findability” score.  
+This integration would transform the app from a deterministic scoring demo into a genuine findability tracker for AI-powered search tools, while still keeping the current FastAPI design and database intact.
+
+---
