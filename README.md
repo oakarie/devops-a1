@@ -106,3 +106,17 @@ With coverage (if configured locally):
 ```
 pytest --cov
 ```
+
+Coverage goal: aim for around ~90% so we catch the basics without chasing ghosts.
+
+Exact coverage commands:
+
+```
+pytest --maxfail=1 -q --cov=.
+```
+
+The report prints in the terminal by default; if you want HTML too:
+
+```
+pytest --cov=. --cov-report=term-missing --cov-report=html
+```
