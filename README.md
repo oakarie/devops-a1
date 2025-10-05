@@ -1,94 +1,92 @@
-## GPT Findability Tracker
+# GPT Findability Tracker
 
-A teeny FastAPI app that scores a company's basic web findability. No AI, no internet calls — just deterministic rules you can read with coffee in hand.
+A lightweight FastAPI application that measures how "findable" a business is based on simple web presence signals.  
+There’s no AI, no external calls — everything runs locally using deterministic rules.
 
-### Quickstart in 60 seconds
+The app includes:
+- A FastAPI backend with SQLite for storage
+- CRUD endpoints for managing companies
+- An evaluation endpoint that scores web visibility signals
+- A simple CLI client for local testing
+- Automated tests with Pytest and coverage reporting
 
-1) Install deps
+---
 
-```
+## How to Run
+
+### 1. Install dependencies
+```bash
 pip install -r requirements.txt
 ```
 
-2) Run the API
-
-```
+### 2. Start the API
+```bash
 uvicorn main:app --reload
 ```
 
-3) Run the CLI (optional but comfy)
-
+If successful, you’ll see:
 ```
-python cli_client.py
-```
-
-### Quickstart
-
-1) Install deps
-
-```
-pip install -r requirements.txt
+Uvicorn running on http://127.0.0.1:8000
 ```
 
-2) Run the server
-
-```
-uvicorn main:app --reload
-```
-
-3) Healthcheck
-
-```
+### 3. Check that it’s running
+```bash
 curl http://127.0.0.1:8000/health
 ```
-
-### API tour (tiny and friendly)
-
-- Healthcheck
-
-```
-curl http://127.0.0.1:8000/health
+Expected output:
+```json
+{"status": "ok"}
 ```
 
-- Create a company
-
+### 4. (Optional) View the docs
+You can open the interactive API docs at:
 ```
-curl -s -X POST http://127.0.0.1:8000/companies \
-  -H 'Content-Type: application/json' \
+http://127.0.0.1:8000/docs
+```
+
+---
+
+## Example Workflow
+
+### Create a company
+```bash
+curl -X POST http://127.0.0.1:8000/companies \
+  -H "Content-Type: application/json" \
   -d '{"name": "Acme Co", "website": "https://acme.example"}'
 ```
 
-- List companies (+ optional name filter)
-
-```
-curl -s 'http://127.0.0.1:8000/companies?q=acme'
-```
-
-- Get one by id
-
-```
-curl -s http://127.0.0.1:8000/companies/1
+### List all companies
+```bash
+curl http://127.0.0.1:8000/companies
 ```
 
-- Update (partial)
-
+### Get one company by ID
+```bash
+curl http://127.0.0.1:8000/companies/1
 ```
-curl -s -X PATCH http://127.0.0.1:8000/companies/1 \
-  -H 'Content-Type: application/json' \
+
+### Update company details
+```bash
+curl -X PATCH http://127.0.0.1:8000/companies/1 \
+  -H "Content-Type: application/json" \
   -d '{"city": "New York"}'
 ```
 
-- Delete
-
+### Delete a company
+```bash
+curl -X DELETE http://127.0.0.1:8000/companies/1
 ```
-curl -i -X DELETE http://127.0.0.1:8000/companies/1
-```
 
-- Evaluate (score signals → save Evaluation)
+---
 
-```
-curl -s -X POST http://127.0.0.1:8000/evaluate \
-  -H 'Content-Type: application/json' \
+## Evaluating a Company
+
+Each company can be evaluated based on ten basic web signals.
+
+Example request:
+```bash
+curl -X POST http://127.0.0.1:8000/evaluate \
+  -H "Content-Type: application/json" \
   -d '{
     "company_id": 1,
     "has_contact_page": true,
@@ -104,154 +102,91 @@ curl -s -X POST http://127.0.0.1:8000/evaluate \
   }'
 ```
 
-Typical response keys:
-
-```
-{ "id": 123, "company_id": 1, "score": 0.84, "badge": "excellent", "evidence": ["+ contact page", "..."] }
-```
-
-Create one (name is the only must-have):
-
-```
-curl -s -X POST http://127.0.0.1:8000/companies \
-  -H 'Content-Type: application/json' \
-  -d '{"name": "Acme Co", "website": "https://acme.example"}'
-```
-
-List them (optionally filter by name):
-
-```
-curl -s 'http://127.0.0.1:8000/companies?q=acme'
-```
-
-Update one (partial update — only what you send changes):
-
-```
-curl -s -X PATCH http://127.0.0.1:8000/companies/1 \
-  -H 'Content-Type: application/json' \
-  -d '{"name": "Acme Incorporated", "city": "New York"}'
-```
-
-Delete one (bye bye):
-
-```
-curl -i -X DELETE http://127.0.0.1:8000/companies/1
-```
-
-### Evaluate a company
-
-Sample request body:
-
-```
+Typical response:
+```json
 {
-  "company_id": 1,
-  "has_contact_page": true,
-  "has_clear_services_page": true,
-  "has_gmb_or_maps_listing": true,
-  "has_recent_updates": false,
-  "has_reviews_or_testimonials": true,
-  "has_online_booking_or_form": false,
-  "uses_basic_schema_markup": true,
-  "has_consistent_name_address_phone": true,
-  "has_fast_load_time_claim": true,
-  "content_matches_intent": true
-}
-```
-
-Call it:
-
-```
-curl -s -X POST http://127.0.0.1:8000/evaluate \
-  -H 'Content-Type: application/json' \
-  -d @body.json
-```
-
-Typical response keys:
-
-```
-{
-  "id": 123,
+  "id": 1,
   "company_id": 1,
   "score": 0.84,
   "badge": "excellent",
-  "evidence": ["+ contact page", "..."],
-  "created_at": "..."
+  "evidence": ["+ contact page", "+ clear services page"],
+  "created_at": "2025-10-05T20:41:30"
 }
 ```
 
-### Tests (and coverage)
+---
 
-Run tests:
+## CLI Usage
 
+If you prefer a quick interactive run:
+```bash
+python cli_client.py
 ```
+
+The CLI will:
+1. Ask for company details (name, website, etc.)
+2. Ask yes/no questions for each signal
+3. Submit to the API and print the score, badge, and evidence
+
+Make sure the API is running first:
+```bash
+uvicorn main:app --reload
+```
+
+---
+
+## Running Tests
+
+Run all tests:
+```bash
 pytest --maxfail=1 -q
 ```
 
-With coverage:
-
-```
-pytest --maxfail=1 -q --cov=.
-```
-
-Coverage goal: ~90% so we catch the basics without chasing ghosts.
-
-Exact coverage commands:
-
-```
-pytest --maxfail=1 -q --cov=.
+Run with coverage:
+```bash
+pytest --cov=. --cov-report=term-missing
 ```
 
-The report prints in the terminal by default; if you want HTML too:
+HTML coverage report:
+```bash
+pytest --cov=. --cov-report=html
+```
+Then open `htmlcov/index.html` in your browser.
+
+---
+
+## Project Structure
 
 ```
-pytest --cov=. --cov-report=term-missing --cov-report=html
+.
+├── main.py                # FastAPI app with routes and models
+├── cli_client.py          # CLI helper for testing the API
+├── requirements.txt
+├── tests/                 # Pytest suite
+│   ├── test_companies.py
+│   ├── test_evaluations.py
+│   └── test_scoring.py
+└── README.md
 ```
 
-### CLI helper
+---
 
-If you prefer typing answers instead of crafting JSON, there's a tiny CLI:
+## Notes
 
-```
-python cli_client.py
-```
+- No external dependencies beyond what’s listed in `requirements.txt`.
+- No API keys or network access required.
+- Built small on purpose — clear enough to extend later for DevOps or scaling tasks.
 
-It will:
-- ask for company details (reuses an existing one by name if found)
-- ask y/n for the 10 signals (same order as scoring)
-- call /evaluate and pretty-print the score, badge, and evidence
+---
 
-Pro tip (in two steps):
-1) start API → `uvicorn main:app --reload`
-2) run CLI → `python cli_client.py`
+## Troubleshooting
 
-### Architecture (ASCII edition)
+| Issue | Fix |
+|-------|-----|
+| Port already in use | Run `uvicorn main:app --reload --port 8080` |
+| "Connection refused" | Make sure the API is running before using the CLI |
+| Validation error (422) | Check your JSON keys and values |
+| Database not updating | Delete `gpt_findability.db` and restart |
+| Tests fail unexpectedly | Ensure Python ≥ 3.11 and reinstall dependencies |
 
-```
-[ CLI ]  --->  [ FastAPI app ]  <-->  [ SQLite DB ]
-                 ^   ^
-                 |   |
-           compute_findability (pure, deterministic)
-```
 
-### Notes
-
-- No AI, no external services. Deterministic scoring with transparent rules.
-- Built small on purpose — perfect for DevOps follow-up tasks.
-- Tone: friendly, not corporate. Bring your own coffee.
-
-### CLI helper
-
-If you prefer typing answers instead of crafting JSON, there's a tiny CLI:
-
-```
-python cli_client.py
-```
-
-It will:
-- ask for company details (reuses an existing one by name if found)
-- ask y/n for the 10 signals (same order as scoring)
-- call /evaluate and pretty-print the score, badge, and evidence
-
-Pro tip (in two steps):
-1) start API → `uvicorn main:app --reload`
-2) run CLI → `python cli_client.py`
