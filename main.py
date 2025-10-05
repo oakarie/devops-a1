@@ -5,6 +5,8 @@ This tiny FastAPI app just proves it's alive and listening.
 More brains coming later... for now, it's a friendly healthcheck.
 """
 
+__version__ = "0.1.0"
+
 from fastapi import FastAPI, Depends, HTTPException, Query
 from typing import List, Optional, Generator
 from datetime import datetime
@@ -27,9 +29,16 @@ from sqlalchemy.orm import Session, declarative_base, sessionmaker, relationship
 app = FastAPI(
     title="GPT Findability Tracker",
     description=(
-        "A tiny heartbeat service to say we're alive. No fluff, just ok."
+        f"A tiny heartbeat service to say we're alive. No fluff, just ok. (v{__version__})"
     ),
 )
+
+
+@app.middleware("http")
+async def add_version_header(request, call_next):
+    response = await call_next(request)
+    response.headers["x-app-version"] = __version__
+    return response
 
 
 @app.get("/health")
