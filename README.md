@@ -120,3 +120,20 @@ The report prints in the terminal by default; if you want HTML too:
 ```
 pytest --cov=. --cov-report=term-missing --cov-report=html
 ```
+
+### CLI helper
+
+If you prefer typing answers instead of crafting JSON, there's a tiny CLI:
+
+```
+python cli_client.py
+```
+
+It will:
+- ask for company details (reuses an existing one by name if found)
+- ask y/n for the 10 signals (same order as scoring)
+- call /evaluate and pretty-print the score, badge, and evidence
+
+Pro tip (in two steps):
+1) start API → `uvicorn main:app --reload`
+2) run CLI → `python cli_client.py`
