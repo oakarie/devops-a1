@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GPT Findability Tracker</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="container">
+      <header class="page-header">
+        <h1>GPT Findability Tracker</h1>
+        <p>Log a company, run the signal check, and review the evidence.</p>
+      </header>
+
+      <form id="company-form" class="form-card" novalidate>
+        <div class="field">
+          <label for="name">Company name *</label>
+          <input type="text" id="name" name="name" required />
+        </div>
+
+        <div class="field">
+          <label for="website">Website</label>
+          <input type="url" id="website" name="website" placeholder="https://example.com" />
+        </div>
+
+        <div class="field">
+          <label for="country">Country</label>
+          <input type="text" id="country" name="country" />
+        </div>
+
+        <div class="field">
+          <label for="state">State</label>
+          <input type="text" id="state" name="state" />
+        </div>
+
+        <div class="field">
+          <label for="city">City</label>
+          <input type="text" id="city" name="city" />
+        </div>
+
+        <div class="field">
+          <label for="industry">Industry</label>
+          <input type="text" id="industry" name="industry" />
+        </div>
+
+        <div class="field">
+          <label for="niche">Niche</label>
+          <input type="text" id="niche" name="niche" />
+        </div>
+
+        <fieldset class="field fieldset">
+          <legend>Findability signals</legend>
+          <div class="checkbox-grid">
+            <label>
+              <input type="checkbox" data-signal="contact_page" />
+              Contact page
+            </label>
+            <label>
+              <input type="checkbox" data-signal="services_page" />
+              Clear services page
+            </label>
+            <label>
+              <input type="checkbox" data-signal="maps_listing" />
+              Maps / GMB listing
+            </label>
+            <label>
+              <input type="checkbox" data-signal="recent_updates" />
+              Recent updates
+            </label>
+            <label>
+              <input type="checkbox" data-signal="reviews" />
+              Reviews / testimonials
+            </label>
+            <label>
+              <input type="checkbox" data-signal="online_booking" />
+              Online booking / form
+            </label>
+            <label>
+              <input type="checkbox" data-signal="schema_markup" />
+              Basic schema markup
+            </label>
+            <label>
+              <input type="checkbox" data-signal="nap_consistent" />
+              NAP consistent
+            </label>
+            <label>
+              <input type="checkbox" data-signal="loads_fast" />
+              Loads fast
+            </label>
+            <label>
+              <input type="checkbox" data-signal="matches_intent" />
+              Content matches intent
+            </label>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="primary">Evaluate findability</button>
+      </form>
+
+      <section id="results" class="results-card">
+        <h2>Results</h2>
+        <div id="results-content">
+          <p>Submit a company to see the score, badge, and supporting evidence.</p>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
+
