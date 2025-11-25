@@ -8,6 +8,7 @@ More brains coming later... for now, it's a friendly healthcheck.
 __version__ = "0.1.0"
 
 from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional, Generator
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, field_validator
@@ -31,6 +32,24 @@ app = FastAPI(
     description=(
         f"A tiny heartbeat service to say we're alive. No fluff, just ok. (v{__version__})"
     ),
+)
+
+# Friendly CORS config so local frontends can talk to us without drama
+allowed_origins = [
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    # Add GitHub Pages URL later, e.g.
+    # "https://<username>.github.io/<repo>"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    allow_credentials=False,
 )
 
 
@@ -203,7 +222,10 @@ def compute_findability(signals: dict[str, bool]) -> dict:
     else:
         rank_component = 0.0
 
-    rank_confidence = min(1.0, 0.3 + 0.1 * n_true)
+    if n_true == 0:
+        rank_confidence = 0.0
+    else:
+        rank_confidence = min(1.0, 0.3 + 0.1 * n_true)
 
     overall = 0.6 * presence + 0.3 * rank_component + 0.1 * rank_confidence
     # Clamp for safety because float math can be spicy
