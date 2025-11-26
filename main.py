@@ -7,8 +7,11 @@ More brains coming later... for now, it's a friendly healthcheck.
 
 __version__ = "0.1.0"
 
-from fastapi import FastAPI, Depends, HTTPException, Query
+import time
+
+from fastapi import FastAPI, Depends, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from typing import List, Optional, Generator
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, field_validator
@@ -32,6 +35,19 @@ app = FastAPI(
     description=(
         f"A tiny heartbeat service to say we're alive. No fluff, just ok. (v{__version__})"
     ),
+)
+
+# Simple Prometheus counters so we can watch traffic while we prototype
+REQUEST_COUNT = Counter(
+    "api_request_count",
+    "Total API requests",
+    ["method", "path", "status_code"],
+)
+
+REQUEST_LATENCY = Histogram(
+    "api_request_latency_seconds",
+    "Request latency",
+    ["method", "path"],
 )
 
 # Friendly CORS config so local frontends can talk to us without drama
@@ -60,9 +76,32 @@ async def add_version_header(request, call_next):
     return response
 
 
+@app.middleware("http")
+async def instrument_requests(request, call_next):
+    """Record a couple of lightweight Prometheus metrics per request."""
+    start_time = time.perf_counter()
+    response = await call_next(request)
+    elapsed = time.perf_counter() - start_time
+
+    path = request.url.path
+    method = request.method
+
+    REQUEST_LATENCY.labels(method=method, path=path).observe(elapsed)
+    REQUEST_COUNT.labels(
+        method=method, path=path, status_code=str(response.status_code)
+    ).inc()
+    return response
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
+
+
+@app.get("/metrics")
+def metrics() -> Response:
+    """Expose Prometheus metrics for scraping."""
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 # --- tiny SQLite setup (no migrations, just vibes) ---
