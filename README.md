@@ -1,203 +1,47 @@
-# GPT Findability Tracker
+# GPT Findability Tracker (Assignment 2)
 
-A lightweight FastAPI application that measures how "findable" a business is based on simple web presence signals.  
-There’s no AI, no external calls — everything runs locally using deterministic rules.
+## 1. Overview
+Small FastAPI service + SQLite database that scores how “findable” a business is based on ten web-presence signals (contact page, reviews, etc.).  
+Stack: FastAPI, SQLAlchemy, SQLite, Prometheus metrics, Pytest, plus a plain HTML/JS frontend that talks to the API directly. Everything is deterministic and offline-friendly so it runs well in a classroom or lab.
 
-The app includes:
-- A FastAPI backend with SQLite for storage
-- CRUD endpoints for managing companies
-- An evaluation endpoint that scores web visibility signals
-- A simple CLI client for local testing
-- Automated tests with Pytest and coverage reporting
-
----
-
-## How to Run
-
-### 1. Install dependencies
+## 2. Local setup
 ```bash
 pip install -r requirements.txt
-```
-
-### 2. Start the API
-```bash
 uvicorn main:app --reload
 ```
+That boots the API on http://127.0.0.1:8000 with live reload for easier debugging.
 
-If successful, you’ll see:
-```
-Uvicorn running on http://127.0.0.1:8000
-```
+## 3. Running the frontend
+- Open `frontend/index.html` in a browser, or (once GitHub Pages is enabled) visit `https://<your-github-username>.github.io/devops-a2/`.
+- The UI collects company metadata, lets you toggle the ten signals, and then calls `/companies` followed by `/evaluate` to show the score, badge, and evidence card.
 
-### 3. Check that it’s running
+## 4. API overview
+- `GET /health` – sanity check used by tests and Docker health probes.
+- `POST /companies` / `GET /companies` / `GET|PATCH|DELETE /companies/{id}` – CRUD around the SQLite table.
+- `POST /evaluate` – stores an evaluation tied to a company and returns score, badge, and evidence list.
+- `GET /metrics` – Prometheus text exposition with request counters and latency histograms.
+
+## 5. Docker usage
 ```bash
-curl http://127.0.0.1:8000/health
+docker build -t gpt-findability:latest .
+docker run --rm -p 8000:8000 gpt-findability:latest
 ```
-Expected output:
-```json
-{"status": "ok"}
-```
+The container installs requirements, copies the repo into `/app`, and starts `uvicorn main:app --host 0.0.0.0 --port 8000`.
 
-### 4. (Optional) View the docs
-You can open the interactive API docs at:
-```
-http://127.0.0.1:8000/docs
-```
-
----
-
-## Example Workflow
-
-### Create a company
+## 6. Tests & coverage
 ```bash
-curl -X POST http://127.0.0.1:8000/companies \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Acme Co", "website": "https://acme.example"}'
+pytest --maxfail=1 --cov=. --cov-report=term-missing --cov-fail-under=70
 ```
+The same command runs locally and inside CI; it fails the build if coverage dips under 70%.
 
-### List all companies
-```bash
-curl http://127.0.0.1:8000/companies
-```
+## 7. CI & CD
+- `.github/workflows/ci.yml` runs on every push/PR, installs deps on Python 3.11, and executes the test+coverage command above.
+- `.github/workflows/deploy-backend.yml` triggers only when `main` updates, repeats the tests, builds `gpt-findability-backend`, and includes a placeholder step where Render/Fly/EC2 deployment would plug in (expects secrets such as `CLOUD_API_KEY` / `SERVICE_ID`).
+- `.github/workflows/deploy-frontend.yml` publishes the static `frontend/` folder to GitHub Pages whenever `main` changes, so the UI auto-hosts without extra infra.
 
-### Get one company by ID
-```bash
-curl http://127.0.0.1:8000/companies/1
-```
+## 8. Monitoring
+Every HTTP request passes through a Prometheus-instrumented middleware.  
+`GET /metrics` exposes `api_request_count{method,path,status_code}` and `api_request_latency_seconds{method,path}` so we can plug Grafana/Prometheus in later or just curl it during demos.
 
-### Update company details
-```bash
-curl -X PATCH http://127.0.0.1:8000/companies/1 \
-  -H "Content-Type: application/json" \
-  -d '{"city": "New York"}'
-```
-
-### Delete a company
-```bash
-curl -X DELETE http://127.0.0.1:8000/companies/1
-```
-
----
-
-## Evaluating a Company
-
-Each company can be evaluated based on ten basic web signals.
-
-Example request:
-```bash
-curl -X POST http://127.0.0.1:8000/evaluate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "company_id": 1,
-    "has_contact_page": true,
-    "has_clear_services_page": true,
-    "has_gmb_or_maps_listing": true,
-    "has_recent_updates": false,
-    "has_reviews_or_testimonials": true,
-    "has_online_booking_or_form": false,
-    "uses_basic_schema_markup": true,
-    "has_consistent_name_address_phone": true,
-    "has_fast_load_time_claim": true,
-    "content_matches_intent": true
-  }'
-```
-
-Typical response:
-```json
-{
-  "id": 1,
-  "company_id": 1,
-  "score": 0.84,
-  "badge": "excellent",
-  "evidence": ["+ contact page", "+ clear services page"],
-  "created_at": "2025-10-05T20:41:30"
-}
-```
-
----
-
-## CLI Usage
-
-If you prefer a quick interactive run:
-```bash
-python cli_client.py
-```
-
-The CLI will:
-1. Ask for company details (name, website, etc.)
-2. Ask yes/no questions for each signal
-3. Submit to the API and print the score, badge, and evidence
-
-Make sure the API is running first:
-```bash
-uvicorn main:app --reload
-```
-
----
-
-## Running Tests
-
-Run all tests:
-```bash
-pytest --maxfail=1 -q
-```
-
-Run with coverage:
-```bash
-pytest --cov=. --cov-report=term-missing
-```
-
-HTML coverage report:
-```bash
-pytest --cov=. --cov-report=html
-```
-Then open `htmlcov/index.html` in your browser.
-
----
-
-## Project Structure
-
-```
-.
-├── main.py                # FastAPI app with routes and models
-├── cli_client.py          # CLI helper for testing the API
-├── requirements.txt
-├── tests/                 # Pytest suite
-│   ├── test_companies.py
-│   ├── test_evaluations.py
-│   └── test_scoring.py
-└── README.md
-```
-
----
-
-## Notes
-
-- No external dependencies beyond what’s listed in `requirements.txt`.
-- No API keys or network access required.
-- Built small on purpose — clear enough to extend later for DevOps or scaling tasks.
-
----
-
-## Troubleshooting
-
-| Issue | Fix |
-|-------|-----|
-| Port already in use | Run `uvicorn main:app --reload --port 8080` |
-| "Connection refused" | Make sure the API is running before using the CLI |
-| Validation error (422) | Check your JSON keys and values |
-| Database not updating | Delete `gpt_findability.db` and restart |
-| Tests fail unexpectedly | Ensure Python ≥ 3.11 and reinstall dependencies |
-
-## Future Work
-
-The next step for this project would be to connect the evaluation logic to a real language model, specifically OpenAI’s GPT API.  
-Instead of manually providing signals, the system would automatically generate structured "probes" such as:
-
-> “Which HVAC companies are based in Montreal?”  
-> “Name solar panel installers in Madrid.”
-
-The API’s responses could then be parsed to determine if a given business is mentioned or ranked, producing a more realistic “findability” score.  
-This integration would transform the app from a deterministic scoring demo into a genuine findability tracker for AI-powered search tools, while still keeping the current FastAPI design and database intact.
-
----
+## 9. Assignment 2 report
+[Assignment 2 Report (PDF)](assignment-2-report.pdf) – placeholder copy lives in the repo so graders have a stable link; replace it with the final deliverable as needed.
