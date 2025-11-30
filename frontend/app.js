@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE = "https://gpt-findability-backend.onrender.com";
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("company-form");
@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     try {
-      const companyResponse = await fetch(`${API_BASE_URL}/companies`, {
+      const companyResponse = await fetch(`${API_BASE}/companies`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(companyPayload),
@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error("The backend did not return a company_id.");
       }
 
-      const evaluationResponse = await fetch(`${API_BASE_URL}/evaluate`, {
+      const evaluationResponse = await fetch(`${API_BASE}/evaluate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ company_id: companyId, ...signalPayload }),
