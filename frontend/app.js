@@ -1,4 +1,16 @@
 const API_BASE = "https://gpt-findability-backend.onrender.com";
+const SIGNAL_FIELD_MAP = {
+  contact_page: "has_contact_page",
+  services_page: "has_clear_services_page",
+  maps_listing: "has_gmb_or_maps_listing",
+  recent_updates: "has_recent_updates",
+  reviews: "has_reviews_or_testimonials",
+  online_booking: "has_online_booking_or_form",
+  schema_markup: "uses_basic_schema_markup",
+  nap_consistent: "has_consistent_name_address_phone",
+  loads_fast: "has_fast_load_time_claim",
+  matches_intent: "content_matches_intent",
+};
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("company-form");
@@ -35,6 +47,31 @@ document.addEventListener("DOMContentLoaded", () => {
     )}</p>`;
   };
 
+  const normalizeDetail = (detail) => {
+    if (Array.isArray(detail)) {
+      return detail
+        .map((entry) => {
+          if (typeof entry === "string") {
+            return entry;
+          }
+          const loc = Array.isArray(entry?.loc) ? entry.loc.at(-1) : undefined;
+          const msg = entry?.msg || entry?.message;
+          if (loc && msg) {
+            return `${loc}: ${msg}`;
+          }
+          return msg || JSON.stringify(entry);
+        })
+        .join("; ");
+    }
+
+    if (detail && typeof detail === "object") {
+      if (detail.message) return detail.message;
+      return JSON.stringify(detail);
+    }
+
+    return detail;
+  };
+
   const fetchJson = async (path, options = {}) => {
     const response = await fetch(`${API_BASE}${path}`, options);
     let payload = null;
@@ -47,10 +84,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!response.ok) {
       const detail =
-        payload?.detail ||
+        normalizeDetail(payload?.detail) ||
         payload?.message ||
         (typeof payload === "string" ? payload : response.statusText || `status ${response.status}`);
-      const friendly = detail ? `The server returned an error: ${detail}` : "The server returned an unexpected error.";
+      const friendly = detail
+        ? `The server returned an error: ${detail}`
+        : "The server returned an unexpected error.";
       throw new Error(friendly);
     }
 
@@ -119,10 +158,13 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const signalPayload = signalInputs.reduce(
-      (acc, input) => ({ ...acc, [input.dataset.signal]: input.checked }),
-      {}
-    );
+    const signalPayload = signalInputs.reduce((acc, input) => {
+      const apiField = SIGNAL_FIELD_MAP[input.dataset.signal];
+      if (!apiField) {
+        return acc;
+      }
+      return { ...acc, [apiField]: input.checked };
+    }, {});
 
     try {
       const companyData = await fetchJson("/companies", {
