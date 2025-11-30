@@ -1,9 +1,7 @@
 name: Deploy Backend
 
 on:
-  push:
-    branches:
-      - main  # only deploy from the primary branch to keep releases deliberate
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:

@@ -1,9 +1,7 @@
 name: Deploy Frontend
 
 on:
-  push:
-    branches:
-      - main  # publish the static site whenever main is updated
+  workflow_dispatch:
 
 permissions:
   contents: read
