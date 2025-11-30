@@ -49,6 +49,16 @@ def test_update_company_partial(client) -> None:
     assert body["city"] == "LA"
 
 
+def test_update_company_no_fields_returns_original(client) -> None:
+    created = client.post("/companies", json={"name": "Static Co"}).json()
+    cid = created["id"]
+    r = client.patch(f"/companies/{cid}", json={})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["id"] == cid
+    assert body["name"] == "Static Co"
+
+
 def test_delete_company_and_404_after(client) -> None:
     created = client.post("/companies", json={"name": "Temp Co"}).json()
     cid = created["id"]
@@ -58,4 +68,34 @@ def test_delete_company_and_404_after(client) -> None:
     # And poof — it's gone
     r = client.get(f"/companies/{cid}")
     assert r.status_code == 404
+
+
+def test_delete_company_missing_returns_404(client) -> None:
+    r = client.delete("/companies/12345")
+    assert r.status_code == 404
+    detail = r.json()["detail"]
+    assert detail["error"] == "company_not_found"
+
+
+def test_create_company_rejects_short_name(client) -> None:
+    r = client.post("/companies", json={"name": "A"})
+    assert r.status_code == 422
+    detail = r.json()["detail"]
+    assert "at least 2 characters" in detail[0]["msg"]
+
+
+def test_update_company_rejects_short_name(client) -> None:
+    created = client.post("/companies", json={"name": "Valid Name"}).json()
+    cid = created["id"]
+    r = client.patch(f"/companies/{cid}", json={"name": "A"})
+    assert r.status_code == 422
+    detail = r.json()["detail"]
+    assert "at least 2 characters" in detail[0]["msg"]
+
+
+def test_update_company_missing_returns_404(client) -> None:
+    r = client.patch("/companies/99999", json={"city": "Nowhere"})
+    assert r.status_code == 404
+    detail = r.json()["detail"]
+    assert detail["error"] == "company_not_found"
 
