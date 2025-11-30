@@ -15,13 +15,39 @@ const SIGNAL_FIELD_MAP = {
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("company-form");
   const resultsContainer = document.getElementById("results-content");
+  const scoreValue = document.getElementById("score-value");
+  const badgeLabel = document.getElementById("badge-label");
   const submitButton = form?.querySelector('button[type="submit"]');
   const signalInputs = Array.from(document.querySelectorAll("input[data-signal]"));
   const idleButtonLabel = submitButton?.textContent?.trim() || "Evaluate findability";
+  const tabButtons = document.querySelectorAll(".tab-button");
+  const tabPanels = document.querySelectorAll(".tab-panel");
 
   if (!form || !resultsContainer) {
     return;
   }
+
+  const activateTab = (targetId) => {
+    tabButtons.forEach((button) => {
+      const isActive = button.dataset.tabTarget === targetId;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-selected", String(isActive));
+    });
+
+    tabPanels.forEach((panel) => {
+      panel.classList.toggle("is-active", panel.id === targetId);
+    });
+  };
+
+  tabButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const targetId = button.dataset.tabTarget;
+      if (targetId) {
+        activateTab(targetId);
+      }
+    });
+  });
+  activateTab("evaluate-panel");
 
   const escapeHtml = (value = "") =>
     value
@@ -96,7 +122,24 @@ document.addEventListener("DOMContentLoaded", () => {
     return payload;
   };
 
+  const percentFromScore = (value) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+      return null;
+    }
+    const normalized = numeric <= 1 ? numeric * 10 : numeric;
+    return Math.max(0, Math.min(100, Math.round((normalized / 10) * 100)));
+  };
+
   const renderResult = ({ score, badge, evidence }) => {
+    const percentScore = percentFromScore(score);
+    if (scoreValue) {
+      scoreValue.textContent = percentScore !== null ? `${percentScore}%` : "—";
+    }
+    if (badgeLabel) {
+      badgeLabel.textContent = badge ? badge : "Not awarded";
+    }
+
     const evidenceItems = Array.isArray(evidence)
       ? evidence
       : evidence
@@ -111,16 +154,6 @@ document.addEventListener("DOMContentLoaded", () => {
         : `<p class="muted">No evidence returned by the evaluator.</p>`;
 
     resultsContainer.innerHTML = `
-      <div class="result-grid">
-        <div>
-          <p class="result-label">Score</p>
-          <p class="result-value">${score ?? "—"}</p>
-        </div>
-        <div>
-          <p class="result-label">Badge</p>
-          <p class="result-value">${escapeHtml(badge || "Not awarded")}</p>
-        </div>
-      </div>
       <div class="result-evidence">
         <p class="result-label">Evidence</p>
         ${evidenceMarkup}
@@ -153,6 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
       renderMessage("Please provide a company name before evaluating.", true);
       if (submitButton) {
         submitButton.disabled = false;
+        submitButton.textContent = idleButtonLabel;
       }
       form.querySelector("#name")?.focus();
       return;

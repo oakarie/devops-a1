@@ -8,114 +8,149 @@
     <script src="app.js" defer></script>
   </head>
   <body>
-    <main class="container">
+    <main class="dashboard-container">
       <header class="page-header">
-        <div class="header-actions">
-          <h1>Visibility Tracker</h1>
-          <a class="header-link" href="#visibility-notes">Learn about visibility</a>
-        </div>
+        <h1>Visibility Tracker</h1>
         <p>Log a company, score its basic SEO / GEO / GPT-style visibility, and review the evidence.</p>
       </header>
 
-      <form id="company-form" class="form-card" novalidate>
-        <div class="field">
-          <label for="name">Company name *</label>
-          <input type="text" id="name" name="name" required />
-        </div>
+      <div class="tab-list" role="tablist">
+        <button
+          class="tab-button is-active"
+          data-tab-target="evaluate-panel"
+          type="button"
+          role="tab"
+          aria-controls="evaluate-panel"
+          aria-selected="true"
+        >
+          Evaluate Visibility
+        </button>
+        <button
+          class="tab-button"
+          data-tab-target="notes-panel"
+          type="button"
+          role="tab"
+          aria-controls="notes-panel"
+          aria-selected="false"
+        >
+          Why Visibility Matters
+        </button>
+      </div>
 
-        <div class="field">
-          <label for="website">Website</label>
-          <input type="url" id="website" name="website" placeholder="https://example.com" />
-        </div>
+      <section class="tab-panel is-active" id="evaluate-panel" role="tabpanel">
+        <div class="dashboard-grid">
+          <form id="company-form" class="form-card" novalidate>
+            <div class="field">
+              <label for="name">Company name *</label>
+              <input type="text" id="name" name="name" required />
+            </div>
 
-        <div class="field">
-          <label for="country">Country</label>
-          <input type="text" id="country" name="country" />
-        </div>
+            <div class="field">
+              <label for="website">Website</label>
+              <input type="url" id="website" name="website" placeholder="https://example.com" />
+            </div>
 
-        <div class="field">
-          <label for="state">State</label>
-          <input type="text" id="state" name="state" />
-        </div>
+            <div class="inline-fields">
+              <div class="field">
+                <label for="country">Country</label>
+                <input type="text" id="country" name="country" />
+              </div>
 
-        <div class="field">
-          <label for="city">City</label>
-          <input type="text" id="city" name="city" />
-        </div>
+              <div class="field">
+                <label for="state">State</label>
+                <input type="text" id="state" name="state" />
+              </div>
+            </div>
 
-        <div class="field">
-          <label for="industry">Industry</label>
-          <input type="text" id="industry" name="industry" />
-        </div>
+            <div class="inline-fields">
+              <div class="field">
+                <label for="city">City</label>
+                <input type="text" id="city" name="city" />
+              </div>
 
-        <div class="field">
-          <label for="niche">Niche</label>
-          <input type="text" id="niche" name="niche" />
-        </div>
+              <div class="field">
+                <label for="industry">Industry</label>
+                <input type="text" id="industry" name="industry" />
+              </div>
+            </div>
 
-        <fieldset class="field fieldset">
-          <legend>Findability signals</legend>
-          <div class="checkbox-grid">
-            <label>
-              <input type="checkbox" data-signal="contact_page" />
-              Contact page
-            </label>
-            <label>
-              <input type="checkbox" data-signal="services_page" />
-              Clear services page
-            </label>
-            <label>
-              <input type="checkbox" data-signal="maps_listing" />
-              Maps / GMB listing
-            </label>
-            <label>
-              <input type="checkbox" data-signal="recent_updates" />
-              Recent updates
-            </label>
-            <label>
-              <input type="checkbox" data-signal="reviews" />
-              Reviews / testimonials
-            </label>
-            <label>
-              <input type="checkbox" data-signal="online_booking" />
-              Online booking / form
-            </label>
-            <label>
-              <input type="checkbox" data-signal="schema_markup" />
-              Basic schema markup
-            </label>
-            <label>
-              <input type="checkbox" data-signal="nap_consistent" />
-              NAP consistent
-            </label>
-            <label>
-              <input type="checkbox" data-signal="loads_fast" />
-              Loads fast
-            </label>
-            <label>
-              <input type="checkbox" data-signal="matches_intent" />
-              Content matches intent
-            </label>
-          </div>
-        </fieldset>
+            <div class="field">
+              <label for="niche">Niche</label>
+              <input type="text" id="niche" name="niche" />
+            </div>
 
-        <button type="submit" class="primary">Evaluate findability</button>
-      </form>
+            <fieldset class="field fieldset">
+              <legend>Findability signals</legend>
+              <div class="checkbox-grid">
+                <label>
+                  <input type="checkbox" data-signal="contact_page" />
+                  Contact page
+                </label>
+                <label>
+                  <input type="checkbox" data-signal="services_page" />
+                  Clear services page
+                </label>
+                <label>
+                  <input type="checkbox" data-signal="maps_listing" />
+                  Maps / GMB listing
+                </label>
+                <label>
+                  <input type="checkbox" data-signal="recent_updates" />
+                  Recent updates
+                </label>
+                <label>
+                  <input type="checkbox" data-signal="reviews" />
+                  Reviews / testimonials
+                </label>
+                <label>
+                  <input type="checkbox" data-signal="online_booking" />
+                  Online booking / form
+                </label>
+                <label>
+                  <input type="checkbox" data-signal="schema_markup" />
+                  Basic schema markup
+                </label>
+                <label>
+                  <input type="checkbox" data-signal="nap_consistent" />
+                  NAP consistent
+                </label>
+                <label>
+                  <input type="checkbox" data-signal="loads_fast" />
+                  Loads fast
+                </label>
+                <label>
+                  <input type="checkbox" data-signal="matches_intent" />
+                  Content matches intent
+                </label>
+              </div>
+            </fieldset>
 
-      <section id="results" class="results-card">
-        <h2>Results</h2>
-        <div id="results-content">
-          <p>Submit a company to see the score, badge, and supporting evidence.</p>
+            <button type="submit" class="primary">Evaluate findability</button>
+          </form>
+
+          <section id="results" class="results-card">
+            <div class="results-header">
+              <p class="result-label">Visibility Score</p>
+              <p class="score-value" id="score-value">—</p>
+              <p class="score-subtext">Percent based on 10 core signals</p>
+              <p class="badge-chip" id="badge-label">No badge yet</p>
+            </div>
+            <div id="results-content">
+              <p class="muted">Submit a company to see the badge and supporting evidence.</p>
+            </div>
+          </section>
         </div>
       </section>
 
-      <section id="visibility-notes" class="notes-card">
-        <h2>Why visibility matters (SEO, GEO, GPT)</h2>
-        <p>Traditional SEO focuses on how Google and similar engines rank and describe a business. The basics are still true: a clear contact page, a services page that makes sense, and fast content all help the crawler and users understand what you do.</p>
-        <p>GEO visibility is about local presence. Listings on Maps, a consistent name-address-phone (NAP) trail, and reviews from real customers make it easy for someone nearby to trust the business enough to call or visit.</p>
-        <p>GPT-style assistants change the game a bit. People ask “Who can fix heat pumps near me?” or “Which bakery in Madrid ships croissants?” and the model surfaces only a few results. If the signals are weak, your business may never be mentioned.</p>
-        <p>This lightweight tool is a sanity check. It uses deterministic rules instead of an LLM, but the signals it measures (contact info, testimonials, schema markup, etc.) are the same clues GPT systems rely on when summarizing the web. The idea is to spot gaps before doing anything more complex.</p>
-        <p>The project stays small on purpose for the DevOps class: one FastAPI app, one SQLite database, clear tests, and a static frontend. Later it can plug into real GPT probes or browsers, but this version keeps the surface area tiny so the automation and monitoring story is easy to follow.</p>
+      <section class="tab-panel" id="notes-panel" role="tabpanel">
+        <div class="notes-card">
+          <h2>Why visibility matters (SEO, GEO, GPT)</h2>
+          <p>Traditional SEO focuses on how Google and similar engines rank and describe a business. The basics are still true: a clear contact page, a services page that makes sense, and fast content all help the crawler and users understand what you do.</p>
+          <p>GEO visibility is about local presence. Listings on Maps, a consistent name-address-phone (NAP) trail, and reviews from real customers make it easy for someone nearby to trust the business enough to call or visit.</p>
+          <p>GPT-style assistants change the game a bit. People ask “Who can fix heat pumps near me?” or “Which bakery in Madrid ships croissants?” and the model surfaces only a few results. If the signals are weak, your business may never be mentioned.</p>
+          <p>This lightweight tool is a sanity check. It uses deterministic rules instead of an LLM, but the signals it measures (contact info, testimonials, schema markup, etc.) are the same clues GPT systems rely on when summarizing the web. The idea is to spot gaps before doing anything more complex.</p>
+          <p>The project stays small on purpose for the DevOps class: one FastAPI app, one SQLite database, clear tests, and a static frontend. Later it can plug into real GPT probes or browsers, but this version keeps the surface area tiny so the automation and monitoring story is easy to follow.</p>
+        </div>
       </section>
     </main>
   </body>
