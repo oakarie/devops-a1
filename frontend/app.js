@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("company-form");
   const resultsContainer = document.getElementById("results-content");
   const scoreValue = document.getElementById("score-value");
+  const scoreMeter = document.getElementById("score-meter");
   const badgeLabel = document.getElementById("badge-label");
   const submitButton = form?.querySelector('button[type="submit"]');
   const signalInputs = Array.from(document.querySelectorAll("input[data-signal]"));
@@ -135,6 +136,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const percentScore = percentFromScore(score);
     if (scoreValue) {
       scoreValue.textContent = percentScore !== null ? `${percentScore}%` : "—";
+    }
+    if (scoreMeter) {
+      const degrees = percentScore !== null ? Math.round((percentScore / 100) * 360) : 0;
+      scoreMeter.style.setProperty("--percent", degrees);
     }
     if (badgeLabel) {
       badgeLabel.textContent = badge ? badge : "Not awarded";
