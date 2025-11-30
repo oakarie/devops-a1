@@ -1,8 +1,8 @@
-# GPT Findability Tracker (Assignment 2)
+# Visibility Tracker (Assignment 2)
 
 ## 1. Overview
-Small FastAPI service + SQLite database that scores how “findable” a business is based on ten web-presence signals (contact page, reviews, etc.).  
-Stack: FastAPI, SQLAlchemy, SQLite, Prometheus metrics, Pytest, plus a plain HTML/JS frontend that talks to the API directly. Everything is deterministic and offline-friendly so it runs well in a classroom or lab.
+Small FastAPI service + SQLite database that scores how “visible” a business is across classic SEO, local GEO signals, and GPT-style assistant cues (contact page, reviews, etc.).  
+Stack: FastAPI, SQLAlchemy, SQLite, Prometheus metrics, Pytest, plus a plain HTML/JS frontend that talks to the API directly. Everything is deterministic, rule-based, and offline-friendly so it runs well in a classroom or lab. Today it’s a simple visibility scorer; later it could power GPT probes without changing the core API.
 
 ## 2. Local setup
 ```bash
