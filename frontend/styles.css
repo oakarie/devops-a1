@@ -313,8 +313,8 @@ input[type="url"]:focus {
   position: relative;
   font-size: 2.6rem;
   font-weight: 900;
-  color: #020617;
-  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.15);
+  color: #0f172a;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
 }
 
 .score-subtext {
