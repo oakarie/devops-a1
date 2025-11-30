@@ -34,6 +34,28 @@ document.addEventListener("DOMContentLoaded", () => {
     )}</p>`;
   };
 
+  const fetchJson = async (path, options = {}) => {
+    const response = await fetch(`${API_BASE}${path}`, options);
+    let payload = null;
+
+    try {
+      payload = await response.json();
+    } catch (err) {
+      payload = null;
+    }
+
+    if (!response.ok) {
+      const detail =
+        payload?.detail ||
+        payload?.message ||
+        (typeof payload === "string" ? payload : response.statusText || `status ${response.status}`);
+      const friendly = detail ? `The server returned an error: ${detail}` : "The server returned an unexpected error.";
+      throw new Error(friendly);
+    }
+
+    return payload;
+  };
+
   const renderResult = ({ score, badge, evidence }) => {
     const evidenceItems = Array.isArray(evidence)
       ? evidence
@@ -101,47 +123,37 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     try {
-      const companyResponse = await fetch(`${API_BASE}/companies`, {
+      const companyData = await fetchJson("/companies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(companyPayload),
       });
 
-      if (!companyResponse.ok) {
-        throw new Error("Unable to create the company record.");
-      }
-
-      const companyData = await companyResponse.json();
       const companyId = companyData?.company_id ?? companyData?.id;
 
       if (!companyId) {
         throw new Error("The backend did not return a company_id.");
       }
 
-      const evaluationResponse = await fetch(`${API_BASE}/evaluate`, {
+      const evaluationData = await fetchJson("/evaluate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ company_id: companyId, ...signalPayload }),
       });
 
-      if (!evaluationResponse.ok) {
-        throw new Error("Evaluation request failed.");
-      }
-
-      const evaluationData = await evaluationResponse.json();
       renderResult({
         score: evaluationData?.score,
         badge: evaluationData?.badge,
         evidence: evaluationData?.evidence,
       });
     } catch (error) {
-      // Keep the failure visible but friendly for the class demo.
-      renderMessage(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while evaluating.",
-        true
-      );
+      if (error instanceof TypeError) {
+        renderMessage("Could not reach the backend. Please try again in a moment.", true);
+      } else if (error instanceof Error) {
+        renderMessage(error.message, true);
+      } else {
+        renderMessage("Something went wrong while evaluating.", true);
+      }
     } finally {
       if (submitButton) {
         submitButton.disabled = false;

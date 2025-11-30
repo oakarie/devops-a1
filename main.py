@@ -51,12 +51,9 @@ REQUEST_LATENCY = Histogram(
 
 # Friendly CORS config so local frontends can talk to us without drama
 allowed_origins = [
-    "http://127.0.0.1:5500",
-    "http://localhost:5500",
+    "https://oakarie.github.io",
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-    # Add GitHub Pages URL later, e.g.
-    # "https://<username>.github.io/<repo>"
 ]
 
 app.add_middleware(
