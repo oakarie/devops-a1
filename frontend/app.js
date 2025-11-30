@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const resultsContainer = document.getElementById("results-content");
   const submitButton = form?.querySelector('button[type="submit"]');
   const signalInputs = Array.from(document.querySelectorAll("input[data-signal]"));
+  const idleButtonLabel = submitButton?.textContent?.trim() || "Evaluate findability";
 
   if (!form || !resultsContainer) {
     return;
@@ -93,6 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (submitButton) {
       submitButton.disabled = true;
+      submitButton.textContent = "Evaluating...";
     }
 
     renderMessage("Evaluating…");
@@ -157,6 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } finally {
       if (submitButton) {
         submitButton.disabled = false;
+        submitButton.textContent = idleButtonLabel;
       }
     }
   });
