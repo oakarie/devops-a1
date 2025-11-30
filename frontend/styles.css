@@ -298,6 +298,7 @@ input[type="url"]:focus {
   align-items: center;
   justify-content: center;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+  position: relative;
 }
 
 .score-meter::after {
@@ -307,6 +308,7 @@ input[type="url"]:focus {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.95);
   box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.25);
+  z-index: 1;
 }
 
 .score-value {
