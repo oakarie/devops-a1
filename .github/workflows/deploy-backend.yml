@@ -11,4 +11,4 @@ jobs:
     steps:
       - name: Check Render backend health endpoint
         run: |
-          curl -f https://gpt-findability-backend.onrender.com/healthimage.png
+          curl -f https://gpt-findability-backend.onrender.com/health
