@@ -10,7 +10,10 @@
   <body>
     <main class="container">
       <header class="page-header">
-        <h1>Visibility Tracker</h1>
+        <div class="header-actions">
+          <h1>Visibility Tracker</h1>
+          <a class="header-link" href="#visibility-notes">Learn about visibility</a>
+        </div>
         <p>Log a company, score its basic SEO / GEO / GPT-style visibility, and review the evidence.</p>
       </header>
 
@@ -104,6 +107,15 @@
         <div id="results-content">
           <p>Submit a company to see the score, badge, and supporting evidence.</p>
         </div>
+      </section>
+
+      <section id="visibility-notes" class="notes-card">
+        <h2>Why visibility matters (SEO, GEO, GPT)</h2>
+        <p>Traditional SEO focuses on how Google and similar engines rank and describe a business. The basics are still true: a clear contact page, a services page that makes sense, and fast content all help the crawler and users understand what you do.</p>
+        <p>GEO visibility is about local presence. Listings on Maps, a consistent name-address-phone (NAP) trail, and reviews from real customers make it easy for someone nearby to trust the business enough to call or visit.</p>
+        <p>GPT-style assistants change the game a bit. People ask “Who can fix heat pumps near me?” or “Which bakery in Madrid ships croissants?” and the model surfaces only a few results. If the signals are weak, your business may never be mentioned.</p>
+        <p>This lightweight tool is a sanity check. It uses deterministic rules instead of an LLM, but the signals it measures (contact info, testimonials, schema markup, etc.) are the same clues GPT systems rely on when summarizing the web. The idea is to spot gaps before doing anything more complex.</p>
+        <p>The project stays small on purpose for the DevOps class: one FastAPI app, one SQLite database, clear tests, and a static frontend. Later it can plug into real GPT probes or browsers, but this version keeps the surface area tiny so the automation and monitoring story is easy to follow.</p>
       </section>
     </main>
   </body>
