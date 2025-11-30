@@ -8,8 +8,7 @@ More brains coming later... for now, it's a friendly healthcheck.
 __version__ = "0.1.0"
 
 import time
-
-from fastapi import FastAPI, Depends, HTTPException, Query, Response
+from fastapi import FastAPI, Depends, HTTPException, Query, Response  # pyright: ignore[reportMissingImports]
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from typing import List, Optional, Generator
