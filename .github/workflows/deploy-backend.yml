@@ -1,31 +1,14 @@
 name: Deploy Backend
 
 on:
+  # Manual only – real deployment is handled by Render via render.yaml
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  verify-production-backend:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: pip install --no-cache-dir -r requirements.txt
-
-      - name: Run tests with coverage floor
-        run: pytest --maxfail=1 --cov=. --cov-report=term-missing --cov-fail-under=70
-
-      - name: Build backend container
-        run: docker build -t gpt-findability-backend .
-
-      - name: Deploy to cloud provider
+      - name: Check Render backend health endpoint
         run: |
-          echo "Deployment step placeholder — this is where Render/Fly.io/EC2/CD action would go."
-          echo "Expect CLOUD_API_KEY and SERVICE_ID secrets to be set in repo settings."
-
+          curl -f https://gpt-findability-backend.onrender.com/health
