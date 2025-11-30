@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: gpt-findability-backend
+    env: docker
+    plan: free
+    region: frankfurt
+    branch: main
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    healthCheckPath: /health
