@@ -49,19 +49,27 @@ REQUEST_LATENCY = Histogram(
     ["method", "path"],
 )
 
-# Friendly CORS config so local frontends can talk to us without drama
-allowed_origins = [
+# Friendly CORS config so local frontends can talk to us without drama.
+# Important: Origins must NOT include trailing slashes or Starlette rejects them.
+prod_frontend_origins = [
     "https://oakarie.github.io",
-    "https://seosignalcheck.com/",
+    "https://oakarie.github.io/devops-a2",  # GitHub Pages path hint (origin matches base domain)
+    "https://seosignalcheck.com",  # custom domain + Cloudflare
+    "https://www.seosignalcheck.com",
+]
+
+local_frontend_origins = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
 ]
 
+allowed_origins = prod_frontend_origins + local_frontend_origins
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Accept"],
     allow_credentials=False,
 )
 

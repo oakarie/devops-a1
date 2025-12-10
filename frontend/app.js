@@ -99,8 +99,23 @@ document.addEventListener("DOMContentLoaded", () => {
     return detail;
   };
 
+  const loggableOptions = (options = {}) => {
+    const { body, ...rest } = options;
+    return { ...rest, hasBody: Boolean(body) };
+  };
+
   const fetchJson = async (path, options = {}) => {
-    const response = await fetch(`${API_BASE}${path}`, options);
+    let response;
+    try {
+      response = await fetch(`${API_BASE}${path}`, options);
+    } catch (error) {
+      console.error("Network error while calling API", {
+        path,
+        options: loggableOptions(options),
+        error,
+      });
+      throw error;
+    }
     let payload = null;
 
     try {
@@ -114,9 +129,15 @@ document.addEventListener("DOMContentLoaded", () => {
         normalizeDetail(payload?.detail) ||
         payload?.message ||
         (typeof payload === "string" ? payload : response.statusText || `status ${response.status}`);
+      console.error("API responded with an error", {
+        path,
+        status: response.status,
+        payload,
+        options: loggableOptions(options),
+      });
       const friendly = detail
-        ? `The server returned an error: ${detail}`
-        : "The server returned an unexpected error.";
+        ? `Server error (${response.status}): ${detail}`
+        : `Server error (${response.status}): ${response.statusText || "Unexpected response"}`;
       throw new Error(friendly);
     }
 
@@ -230,8 +251,12 @@ document.addEventListener("DOMContentLoaded", () => {
         evidence: evaluationData?.evidence,
       });
     } catch (error) {
+      console.error("Evaluation request failed", error);
       if (error instanceof TypeError) {
-        renderMessage("Could not reach the backend. Please try again in a moment.", true);
+        renderMessage(
+          "Network error: the browser could not reach the evaluator API. Check your connection (or CORS settings) and try again.",
+          true
+        );
       } else if (error instanceof Error) {
         renderMessage(error.message, true);
       } else {
@@ -244,5 +269,21 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
+
+  const runHealthCheck = async () => {
+    try {
+      const health = await fetchJson("/health");
+      console.info("Backend health check succeeded", health);
+      return health;
+    } catch (error) {
+      console.error("Backend health check failed", error);
+      throw error;
+    }
+  };
+
+  window.checkBackendHealth = runHealthCheck;
+  if (window.location.hostname === "localhost") {
+    runHealthCheck().catch(() => {});
+  }
 });
 
