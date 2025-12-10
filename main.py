@@ -51,6 +51,10 @@ REQUEST_LATENCY = Histogram(
 
 # Friendly CORS config so local frontends can talk to us without drama.
 # Important: Origins must NOT include trailing slashes or Starlette rejects them.
+# Quick manual check (run locally when debugging CORS issues, do NOT automate):
+# curl -i -X OPTIONS https://gpt-findability-backend.onrender.com/evaluate \
+#   -H "Origin: https://seosignalcheck.com" \
+#   -H "Access-Control-Request-Method: POST"
 prod_frontend_origins = [
     "https://oakarie.github.io",
     "https://oakarie.github.io/devops-a2",  # GitHub Pages path hint (origin matches base domain)
@@ -68,8 +72,8 @@ allowed_origins = prod_frontend_origins + local_frontend_origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Accept"],
+    allow_methods=["*"],  # keep the demo flexible across GitHub Pages deploys
+    allow_headers=["*"],  # Content-Type/Accept plus any extra GH Pages headers
     allow_credentials=False,
 )
 

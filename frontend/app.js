@@ -104,16 +104,49 @@ document.addEventListener("DOMContentLoaded", () => {
     return { ...rest, hasBody: Boolean(body) };
   };
 
+  const normalizePath = (path = "") => {
+    if (!path) {
+      return "/";
+    }
+    return path.startsWith("/") ? path : `/${path}`;
+  };
+
+  const buildApiUrl = (path = "") => `${API_BASE}${normalizePath(path)}`;
+
+  const logErrorDetails = (label, error) => {
+    if (!error || typeof error !== "object") {
+      return;
+    }
+    const details = {};
+    if ("message" in error && error.message) {
+      details.message = error.message;
+    }
+    if ("stack" in error && error.stack) {
+      details.stack = error.stack;
+    }
+    if (Object.keys(details).length > 0) {
+      console.error(`${label} details`, details);
+    }
+  };
+
+  console.info("Evaluator API base URL", API_BASE);
+
   const fetchJson = async (path, options = {}) => {
     let response;
     try {
-      response = await fetch(`${API_BASE}${path}`, options);
+      const url = buildApiUrl(path);
+      console.info("Calling evaluator API", {
+        url,
+        options: loggableOptions(options),
+      });
+      response = await fetch(url, options);
     } catch (error) {
       console.error("Network error while calling API", {
         path,
         options: loggableOptions(options),
         error,
       });
+      logErrorDetails("Network error while calling API", error);
       throw error;
     }
     let payload = null;
@@ -134,6 +167,9 @@ document.addEventListener("DOMContentLoaded", () => {
         status: response.status,
         payload,
         options: loggableOptions(options),
+      });
+      logErrorDetails("API responded with an error", {
+        message: detail,
       });
       const friendly = detail
         ? `Server error (${response.status}): ${detail}`
@@ -251,7 +287,8 @@ document.addEventListener("DOMContentLoaded", () => {
         evidence: evaluationData?.evidence,
       });
     } catch (error) {
-      console.error("Evaluation request failed", error);
+      console.error("Evaluate API error", error);
+      logErrorDetails("Evaluate API error", error);
       if (error instanceof TypeError) {
         renderMessage(
           "Network error: the browser could not reach the evaluator API. Check your connection (or CORS settings) and try again.",
