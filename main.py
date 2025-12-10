@@ -52,6 +52,7 @@ REQUEST_LATENCY = Histogram(
 # Friendly CORS config so local frontends can talk to us without drama
 allowed_origins = [
     "https://oakarie.github.io",
+    "https://seosignalcheck.com/",
     "http://127.0.0.1:8000",
     "http://localhost:8000",
 ]
